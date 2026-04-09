@@ -27,7 +27,7 @@ critic = Agent(
     model_client=client,
 )
 
-termination = (MaxMessageTermination(max_messages=4), TextMentionTermination(text="APPROVED"))
+termination = MaxMessageTermination(max_messages=4) | TextMentionTermination(text="APPROVED")
 
 orchestrator = RoundRobinOrchestrator(
     agents=[poet, critic],
@@ -48,8 +48,18 @@ async def test_critique():
 
 async def run_orchestration():
     task = "Write a haiku about the ocean."
-    stream = orchestrator.run(task)
-    async for message in stream:
-        print(f"{message.agent_name} says: {message.text}")
+    step = 0
+    labels = {
+        ("Poet", 1): "generated_poem",
+        ("Critic", 1): "received_poem → generated_critic",
+        ("Poet", 2): "poem_modified",
+    }
+    async for message in orchestrator.run_stream(task):
+        if hasattr(message, "source") and hasattr(message, "content"):
+            step += 1
+            label = labels.get((message.source, step), message.source)
+            print(f"\n--- [{label}] {message.source} ---")
+            print(message.content)
+            print(flush=True)
 
 asyncio.run(run_orchestration())
