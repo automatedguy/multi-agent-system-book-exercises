@@ -50,14 +50,16 @@ async def run_orchestration():
     task = "Write a haiku about the ocean."
     step = 0
     labels = {
-        ("Poet", 1): "generated_poem",
-        ("Critic", 1): "received_poem → generated_critic",
-        ("Poet", 2): "poem_modified",
+        1: "generated_poem",
+        2: "received_poem → generated_critic",
+        3: "poem_modified",
     }
     async for message in orchestrator.run_stream(task):
         if hasattr(message, "source") and hasattr(message, "content"):
+            if message.source == "user":
+                continue
             step += 1
-            label = labels.get((message.source, step), message.source)
+            label = labels.get(step, f"step_{step}")
             print(f"\n--- [{label}] {message.source} ---")
             print(message.content)
             print(flush=True)
