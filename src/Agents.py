@@ -1,13 +1,17 @@
 import asyncio
+import os
+from dotenv import load_dotenv
 from picoagents import Agent
 from picoagents.llm import OpenAIChatCompletionClient
 from picoagents.orchestration import RoundRobinOrchestrator
 from picoagents.termination import MaxMessageTermination, TextMentionTermination
 
+load_dotenv()
+
 # Setup the language model client
 client = OpenAIChatCompletionClient(
     model="qwen3:8b",
-    base_url="http://192.168.1.9:11434/v1",
+    base_url=os.getenv("BASE_URL"),
     api_key="ollama"
 )
 
